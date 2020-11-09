@@ -1,0 +1,30 @@
+version: '3.8'
+services:
+
+  # PostgreSQL
+  postgres:
+    container_name: postgres
+    build: ./src/db
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: password
+      POSTGRES_URL: postgres://admin:password@localhost:5432/crypto-app
+      POSTGRES_DB: crypto-app
+      POSTGRES_HOST: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - /var/lib/postgresql/data
+
+  # Backend
+  crypto-app-server:
+    container_name: backend
+    build: ./
+    volumes:
+      - ./:/usr/src/crypto-app-server
+    command: npm start
+    working_dir: /usr/src/crypto-app-server
+    ports:
+      - "3001:3001"
+    environment:
+      POSTGRES_URI: postgres://admin:password@postgres:5432/crypto-app
