@@ -72,7 +72,9 @@ export const createAlert = async (req: Request, res : Response, db:any) => {
         console.log('no existing alert, add a new one')
         
         //insert new alert details
-        let alertId = await db.insert({
+
+        const insertion = db.transaction((trx : any) => {
+            trx.insert({
                 'country_id': countryId,
                 'condition': newAlert.condition,
                 'value': newAlert.value,
@@ -80,25 +82,30 @@ export const createAlert = async (req: Request, res : Response, db:any) => {
             })
             .into('alert')
             .returning('alert_id')
-            .catch((err : any) => console.error(err));
-        
-        alertId = alertId[0];
-        
-        //insert into m2m relation
-        //links to fcm token for user's device
-        const insertion = await db
-            .insert({
-                fcm_token_id: tokenId,
-                alert_id: alertId
+            .then((alertId : any) => {
+                alertId = alertId[0];
+                return trx
+                    .insert({
+                        fcm_token_id: tokenId,
+                        alert_id: alertId
+                    })
+                    .into('fcmtokenalertrelation')
+                    .returning('*')
+                    .then((tuple : any) => {
+                        console.log('new tuple is : ');
+                        console.log(tuple)
+                        res.status(200).json(tuple);
+                    })
+                    .catch((err : any) => {
+                        console.error(err);
+                    });
             })
-            .into('fcmtokenalertrelation')
-            .returning('*')
-            .catch((err : any) => {
-                console.error(err);
-            });
+            .then(trx.commit)
+            .catch(trx.rollback);
+        })
+        .catch((err : any) => res.status(400).json('unable to create alert'))
+
         
-        console.log('insertion has occurred');
-        console.log(insertion);
         
     } else {
         //alert already exists, just update the relation

@@ -21,37 +21,53 @@ exports.createAlert = (req, res, db) => __awaiter(void 0, void 0, void 0, functi
     console.log("hitting the function as expected");
     //make sure to include implementation for many-to-many - if there are identical alerts you should just add the
     //reference to the fcmtoken its using. not necessary right now for testing but you should implement this
-    if (req.body.newAlert && req.body.token) {
-        console.log("body parser is working");
-        let { newAlert } = req.body;
-        const { token, tokenId } = req.body;
-        const countryCode = newAlert.country;
-        console.log(newAlert, token, countryCode);
-        console.log('entering first db call');
-        //get the id from admin db - country code sent from third party api so no id on client
-        let countryCodeTuple = yield db
-            .select('*')
-            .from('country')
-            .where('country_code', countryCode);
-        let countryId = countryCodeTuple[0].country_id;
-        newAlert.id = countryId;
-        console.log('entering second db call');
-        //checks if that exact already exists
-        //if it does, simply add a reference to the 
-        let checkExistingAlerts = yield db
-            .select('alert_id')
-            .from('alert')
-            .where({
-            'country_id': countryId,
-            'condition': newAlert.condition,
-            'value': newAlert.value,
-            'type': newAlert.type
-        });
-        console.log('checking existing alerts');
-        console.log(checkExistingAlerts);
-        if (checkExistingAlerts.length === 0) {
-            console.log('no existing alert, add a new one');
-            let alertId = yield db.insert({
+    //validate json
+    if (!req.body.newAlert || !req.body.token) {
+        res.status(400).json('invalid json');
+        return;
+    }
+    let { newAlert } = req.body;
+    const { token, tokenId } = req.body;
+    const countryCode = newAlert.country;
+    //validate the token
+    let dbToken = yield db.select('token')
+        .from('fcmtoken')
+        .where('fcm_token_id', tokenId)
+        .catch((err) => {
+        console.error(err);
+    });
+    dbToken = dbToken[0].token;
+    if (dbToken !== token) {
+        res.status(401).json('invalid token');
+        return;
+    }
+    console.log('entering first db call');
+    //get the id from admin db - country code sent from third party api so no id on client
+    let countryCodeTuple = yield db
+        .select('*')
+        .from('country')
+        .where('country_code', countryCode);
+    let countryId = countryCodeTuple[0].country_id;
+    newAlert.id = countryId;
+    console.log('entering second db call');
+    //checks if that exact already exists
+    //if it does, simply add a reference to the 
+    let checkExistingAlerts = yield db
+        .select('alert_id')
+        .from('alert')
+        .where({
+        'country_id': countryId,
+        'condition': newAlert.condition,
+        'value': newAlert.value,
+        'type': newAlert.type
+    });
+    console.log('checking existing alerts');
+    console.log(checkExistingAlerts);
+    if (checkExistingAlerts.length === 0) {
+        console.log('no existing alert, add a new one');
+        //insert new alert details
+        const insertion = db.transaction((trx) => {
+            trx.insert({
                 'country_id': countryId,
                 'condition': newAlert.condition,
                 'value': newAlert.value,
@@ -59,39 +75,32 @@ exports.createAlert = (req, res, db) => __awaiter(void 0, void 0, void 0, functi
             })
                 .into('alert')
                 .returning('alert_id')
-                .catch((err) => console.error(err));
-            alertId = alertId[0];
-            //validate the token
-            let dbToken = yield db.select('token')
-                .from('fcmtoken')
-                .where('fcm_token_id', tokenId)
-                .catch((err) => {
-                console.error(err);
-            });
-            dbToken = dbToken[0].token;
-            //if token is valid update the m2m relation
-            if (dbToken === token) {
-                const insertion = yield db
+                .then((alertId) => {
+                alertId = alertId[0];
+                return trx
                     .insert({
                     fcm_token_id: tokenId,
                     alert_id: alertId
                 })
                     .into('fcmtokenalertrelation')
                     .returning('*')
+                    .then((tuple) => {
+                    console.log('new tuple is : ');
+                    console.log(tuple);
+                    res.status(200).json(tuple);
+                })
                     .catch((err) => {
                     console.error(err);
                 });
-                console.log('insertion has occurred');
-                console.log(insertion);
-            }
-            else {
-                //send an error
-            }
-        }
-        else {
-            //alert already exists, just update the relation
-            console.log('should only see this if you already added the alert');
-        }
+            })
+                .then(trx.commit)
+                .catch(trx.rollback);
+        })
+            .catch((err) => res.status(400).json('unable to create alert'));
+    }
+    else {
+        //alert already exists, just update the relation
+        console.log('should only see this if you already added the alert');
     }
 });
 //# sourceMappingURL=createAlert.js.map
