@@ -1,4 +1,5 @@
 import {Request, Response} from 'express';
+import { UNIQUE_VIOLATION } from '../utils/errors';
 
 // const createUserAlertRelation = async (countryId : number, db: any) => {
 //     await db.insert({
@@ -31,6 +32,8 @@ export const createAlert = async (req: Request, res : Response, db:any) => {
     .where('fcm_token_id', tokenId)
     .catch((err : any) => {
         console.error(err);
+        res.status(400).json('database error');
+        return;
     });
 
     dbToken = dbToken[0].token;
@@ -47,6 +50,11 @@ export const createAlert = async (req: Request, res : Response, db:any) => {
             .select('*')
             .from('country')
             .where('country_code', countryCode)
+            .catch((err : any) => {
+                console.error(err);
+                res.status(400).json('database error');
+                return;
+            });
 
     let countryId = countryCodeTuple[0].country_id;
     newAlert.id = countryId;
@@ -62,7 +70,12 @@ export const createAlert = async (req: Request, res : Response, db:any) => {
                 'condition': newAlert.condition,
                 'value': newAlert.value,
                 'type': newAlert.type
-            });
+            })
+            .catch((err : any) => {
+                console.error(err);
+                res.status(400).json('database error');
+                return;
+            });;
 
     console.log('checking existing alerts');
     console.log(checkExistingAlerts);
@@ -103,15 +116,32 @@ export const createAlert = async (req: Request, res : Response, db:any) => {
             .then(trx.commit)
             .catch(trx.rollback);
         })
-        .catch((err : any) => res.status(400).json('unable to create alert'))
+        .catch((err : any) => res.status(400).json('unable to create alert'));
 
         
         
     } else {
-        //alert already exists, just update the relation
-        console.log('should only see this if you already added the alert');
-        
-        
+        // alert already exists, just update the relation
+        db.insert({
+            fcm_token_id: tokenId,
+            alert_id: checkExistingAlerts[0].alert_id
+        })
+        .into('fcmtokenalertrelation')
+        .returning('*')
+        .then((tuple : any) => {
+            console.log('new tuple is : ');
+            console.log(tuple)
+            res.status(200).json(tuple);
+        })
+        .catch((err : any) => {
+            console.error(err)
+
+            if (Number(err.code) === UNIQUE_VIOLATION) {
+                res.status(409).json('duplicate alert');
+            }
+
+            res.status(400).json('unable to create alert');
+        });
     }
         
      

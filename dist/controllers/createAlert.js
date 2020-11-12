@@ -35,6 +35,8 @@ exports.createAlert = (req, res, db) => __awaiter(void 0, void 0, void 0, functi
         .where('fcm_token_id', tokenId)
         .catch((err) => {
         console.error(err);
+        res.status(400).json('database error');
+        return;
     });
     dbToken = dbToken[0].token;
     if (dbToken !== token) {
@@ -46,7 +48,12 @@ exports.createAlert = (req, res, db) => __awaiter(void 0, void 0, void 0, functi
     let countryCodeTuple = yield db
         .select('*')
         .from('country')
-        .where('country_code', countryCode);
+        .where('country_code', countryCode)
+        .catch((err) => {
+        console.error(err);
+        res.status(400).json('database error');
+        return;
+    });
     let countryId = countryCodeTuple[0].country_id;
     newAlert.id = countryId;
     console.log('entering second db call');
@@ -60,7 +67,13 @@ exports.createAlert = (req, res, db) => __awaiter(void 0, void 0, void 0, functi
         'condition': newAlert.condition,
         'value': newAlert.value,
         'type': newAlert.type
+    })
+        .catch((err) => {
+        console.error(err);
+        res.status(400).json('database error');
+        return;
     });
+    ;
     console.log('checking existing alerts');
     console.log(checkExistingAlerts);
     if (checkExistingAlerts.length === 0) {
@@ -99,8 +112,24 @@ exports.createAlert = (req, res, db) => __awaiter(void 0, void 0, void 0, functi
             .catch((err) => res.status(400).json('unable to create alert'));
     }
     else {
-        //alert already exists, just update the relation
-        console.log('should only see this if you already added the alert');
+        // alert already exists, just update the relation
+        db.insert({
+            fcm_token_id: tokenId,
+            alert_id: checkExistingAlerts[0].alert_id
+        })
+            .into('fcmtokenalertrelation')
+            .returning('*')
+            .then((tuple) => {
+            console.log('new tuple is : ');
+            console.log(tuple);
+            res.status(200).json(tuple);
+        })
+            .catch((err) => {
+            console.log("you are hitting this");
+            console.log("error code : ");
+            console.log(err.code);
+            res.status(400).json('unable to create alert');
+        });
     }
 });
 //# sourceMappingURL=createAlert.js.map

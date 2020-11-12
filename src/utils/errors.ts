@@ -1,0 +1,1 @@
+export const UNIQUE_VIOLATION : number = 23505;
