@@ -1,101 +1,111 @@
 import {Request, Response} from 'express';
-import {updateWebSocket} from '../utils/websocket';
+
+// const createUserAlertRelation = async (countryId : number, db: any) => {
+//     await db.insert({
+//         countryId: countryId
+//     })
+//     .into('countrywithactivealert')
+//     .catch((err: any) => console.error(err));
+// }
+
 
 export const createAlert = async (req: Request, res : Response, db:any) => {
+
+    console.log("hitting the function as expected");
     //make sure to include implementation for many-to-many - if there are identical alerts you should just add the
     //reference to the fcmtoken its using. not necessary right now for testing but you should implement this
-    if (req.body.newAlert && req.body.token) { 
 
-        let { newAlert } = req.body;
-        const { token } = req.body;
+    //validate json
+    if (!req.body.newAlert || !req.body.token) {
+        res.status(400).json('invalid json');
+        return;
+    }
 
-        console.log('');
-        console.log('');
-        console.log('');
-        console.log('NEW ALERT INCOMING');
-        console.log(newAlert);
-        console.log('');
-        console.log('');
-        console.log('');
+    let { newAlert } = req.body;
+    const { token, tokenId } = req.body;
+    const countryCode = newAlert.country;
 
-        const coinSymbol = newAlert.coin;
+    //validate the token
+    let dbToken = await db.select('token')
+    .from('fcmtoken')
+    .where('fcm_token_id', tokenId)
+    .catch((err : any) => {
+        console.error(err);
+    });
 
-        let coinSymbolId = await db.select('*').from('coin')
-            .where('symbol', coinSymbol);
-        coinSymbolId = coinSymbolId[0].coinid;
-        newAlert.coinid = coinSymbolId;
+    dbToken = dbToken[0].token;
+    
+    if (dbToken !== token) {
+        res.status(401).json('invalid token');
+        return;
+    }
 
-        let coinActiveAlertEntry = await db.select('*').from('coinwithactivealert').where('coinid', coinSymbolId);
+    console.log('entering first db call')
+    
+    //get the id from admin db - country code sent from third party api so no id on client
+    let countryCodeTuple = await db
+            .select('*')
+            .from('country')
+            .where('country_code', countryCode)
+
+    let countryId = countryCodeTuple[0].country_id;
+    newAlert.id = countryId;
+
+    console.log('entering second db call')
+    //checks if that exact already exists
+    //if it does, simply add a reference to the 
+    let checkExistingAlerts = await db
+            .select('alert_id')
+            .from('alert')
+            .where({
+                'country_id': countryId,
+                'condition': newAlert.condition,
+                'value': newAlert.value,
+                'type': newAlert.type
+            });
+
+    console.log('checking existing alerts');
+    console.log(checkExistingAlerts);
+    
+    if (checkExistingAlerts.length === 0) {
+
+        console.log('no existing alert, add a new one')
         
-        
-        
-        //stops having to check every coin when websocket data comes in
-        if (coinActiveAlertEntry.length === 0) {
-
-            console.log('');
-            console.log('');
-            console.log('');
-            console.log('COIN ACTIVE ALERT ENTRY');
-            console.log('THIS SHOULD BE NULL OR AN EMPTY ARRAY OR SOMESUCH');
-            console.log(coinActiveAlertEntry);
-            
-            await db.insert({
-                coinid: coinSymbolId
+        //insert new alert details
+        let alertId = await db.insert({
+                'country_id': countryId,
+                'condition': newAlert.condition,
+                'value': newAlert.value,
+                'type': newAlert.type
             })
-            .into('coinwithactivealert')
-            .returning('coinid')
-            .then((insertedid : any) => {
-                insertedid = insertedid[0];
-                console.log('this is what is returned once you do this.');
-                console.log(insertedid);
-                console.log('And then reset websocket.');
-                db.select('*')
-                    .from('coin')
-                    .where('coinid', insertedid)
-                    .then((coin : any) => {
-                        coin = coin[0].name;
-                        updateWebSocket(coin);
-
-                    })
-                    .catch((err : any) => console.log(err))
-            })
-            .catch((err: any) => console.error(err));
-        }
+            .into('alert')
+            .returning('alert_id')
+            .catch((err : any) => console.error(err));
         
-        const { coin, ...newAlertFormatted } = newAlert;
-
-        console.log('');
-        console.log('');
-        console.log('');
-        console.log('ok lets see if this works');
-        console.log('NEW ALERT MODIFIED');
-        console.log(newAlertFormatted);
-        console.log('');
-        console.log('');
-        console.log('');
-
-        let fcmTokenId = await db.select('*').from('fcmtoken')
-            .where('token', token)
+        alertId = alertId[0];
         
-        fcmTokenId = fcmTokenId[0].fcmtokenid;
-
-        db.insert({
-            ...newAlertFormatted
-        })
-        .into('alert')
-        .returning('alertid')
-        .then((alertId : any) => {
-            const alertIdInt = alertId[0];
-
-            db.insert({
-                fcmtokenid: fcmTokenId,
-                alertid: alertIdInt
+        //insert into m2m relation
+        //links to fcm token for user's device
+        const insertion = await db
+            .insert({
+                fcm_token_id: tokenId,
+                alert_id: alertId
             })
             .into('fcmtokenalertrelation')
-            .returning('alertid')
-            .then((alertId : any) => res.sendStatus(200))
-            .catch((err : any) => console.error(err));
-        })
-        .catch((err: any) => console.error(err));
-    } 
+            .returning('*')
+            .catch((err : any) => {
+                console.error(err);
+            });
+        
+        console.log('insertion has occurred');
+        console.log(insertion);
+        
+    } else {
+        //alert already exists, just update the relation
+        console.log('should only see this if you already added the alert');
+        
+        
+    }
+        
+     
 }

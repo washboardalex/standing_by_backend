@@ -1,7 +1,7 @@
 BEGIN TRANSACTION;
 
 CREATE TABLE fcmtoken (
-    fcmtokenid serial PRIMARY KEY,
+    fcm_token_id serial PRIMARY KEY,
     token varchar(255) UNIQUE NOT NULL
 );
 

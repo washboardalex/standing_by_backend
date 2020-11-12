@@ -8,97 +8,90 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __rest = (this && this.__rest) || function (s, e) {
-    var t = {};
-    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
-        t[p] = s[p];
-    if (s != null && typeof Object.getOwnPropertySymbols === "function")
-        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
-            if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
-                t[p[i]] = s[p[i]];
-        }
-    return t;
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.createAlert = void 0;
-const websocket_1 = require("../utils/websocket");
+// const createUserAlertRelation = async (countryId : number, db: any) => {
+//     await db.insert({
+//         countryId: countryId
+//     })
+//     .into('countrywithactivealert')
+//     .catch((err: any) => console.error(err));
+// }
 exports.createAlert = (req, res, db) => __awaiter(void 0, void 0, void 0, function* () {
+    console.log("hitting the function as expected");
     //make sure to include implementation for many-to-many - if there are identical alerts you should just add the
     //reference to the fcmtoken its using. not necessary right now for testing but you should implement this
     if (req.body.newAlert && req.body.token) {
+        console.log("body parser is working");
         let { newAlert } = req.body;
-        const { token } = req.body;
-        console.log('');
-        console.log('');
-        console.log('');
-        console.log('NEW ALERT INCOMING');
-        console.log(newAlert);
-        console.log('');
-        console.log('');
-        console.log('');
-        const coinSymbol = newAlert.coin;
-        let coinSymbolId = yield db.select('*').from('coin')
-            .where('symbol', coinSymbol);
-        coinSymbolId = coinSymbolId[0].coinid;
-        newAlert.coinid = coinSymbolId;
-        let coinActiveAlertEntry = yield db.select('*').from('coinwithactivealert').where('coinid', coinSymbolId);
-        //stops having to check every coin when websocket data comes in
-        if (coinActiveAlertEntry.length === 0) {
-            console.log('');
-            console.log('');
-            console.log('');
-            console.log('COIN ACTIVE ALERT ENTRY');
-            console.log('THIS SHOULD BE NULL OR AN EMPTY ARRAY OR SOMESUCH');
-            console.log(coinActiveAlertEntry);
-            yield db.insert({
-                coinid: coinSymbolId
+        const { token, tokenId } = req.body;
+        const countryCode = newAlert.country;
+        console.log(newAlert, token, countryCode);
+        console.log('entering first db call');
+        //get the id from admin db - country code sent from third party api so no id on client
+        let countryCodeTuple = yield db
+            .select('*')
+            .from('country')
+            .where('country_code', countryCode);
+        let countryId = countryCodeTuple[0].country_id;
+        newAlert.id = countryId;
+        console.log('entering second db call');
+        //checks if that exact already exists
+        //if it does, simply add a reference to the 
+        let checkExistingAlerts = yield db
+            .select('alert_id')
+            .from('alert')
+            .where({
+            'country_id': countryId,
+            'condition': newAlert.condition,
+            'value': newAlert.value,
+            'type': newAlert.type
+        });
+        console.log('checking existing alerts');
+        console.log(checkExistingAlerts);
+        if (checkExistingAlerts.length === 0) {
+            console.log('no existing alert, add a new one');
+            let alertId = yield db.insert({
+                'country_id': countryId,
+                'condition': newAlert.condition,
+                'value': newAlert.value,
+                'type': newAlert.type
             })
-                .into('coinwithactivealert')
-                .returning('coinid')
-                .then((insertedid) => {
-                insertedid = insertedid[0];
-                console.log('this is what is returned once you do this.');
-                console.log(insertedid);
-                console.log('And then reset websocket.');
-                db.select('*')
-                    .from('coin')
-                    .where('coinid', insertedid)
-                    .then((coin) => {
-                    coin = coin[0].name;
-                    websocket_1.updateWebSocket(coin);
+                .into('alert')
+                .returning('alert_id')
+                .catch((err) => console.error(err));
+            alertId = alertId[0];
+            //validate the token
+            let dbToken = yield db.select('token')
+                .from('fcmtoken')
+                .where('fcm_token_id', tokenId)
+                .catch((err) => {
+                console.error(err);
+            });
+            dbToken = dbToken[0].token;
+            //if token is valid update the m2m relation
+            if (dbToken === token) {
+                const insertion = yield db
+                    .insert({
+                    fcm_token_id: tokenId,
+                    alert_id: alertId
                 })
-                    .catch((err) => console.log(err));
-            })
-                .catch((err) => console.error(err));
+                    .into('fcmtokenalertrelation')
+                    .returning('*')
+                    .catch((err) => {
+                    console.error(err);
+                });
+                console.log('insertion has occurred');
+                console.log(insertion);
+            }
+            else {
+                //send an error
+            }
         }
-        const { coin } = newAlert, newAlertFormatted = __rest(newAlert, ["coin"]);
-        console.log('');
-        console.log('');
-        console.log('');
-        console.log('ok lets see if this works');
-        console.log('NEW ALERT MODIFIED');
-        console.log(newAlertFormatted);
-        console.log('');
-        console.log('');
-        console.log('');
-        let fcmTokenId = yield db.select('*').from('fcmtoken')
-            .where('token', token);
-        fcmTokenId = fcmTokenId[0].fcmtokenid;
-        db.insert(Object.assign({}, newAlertFormatted))
-            .into('alert')
-            .returning('alertid')
-            .then((alertId) => {
-            const alertIdInt = alertId[0];
-            db.insert({
-                fcmtokenid: fcmTokenId,
-                alertid: alertIdInt
-            })
-                .into('fcmtokenalertrelation')
-                .returning('alertid')
-                .then((alertId) => res.sendStatus(200))
-                .catch((err) => console.error(err));
-        })
-            .catch((err) => console.error(err));
+        else {
+            //alert already exists, just update the relation
+            console.log('should only see this if you already added the alert');
+        }
     }
 });
 //# sourceMappingURL=createAlert.js.map

@@ -75,7 +75,6 @@ const addWebSocketListeners = (priceWebSocket) => {
                         default:
                             console.error('No types match in alert object');
                     }
-                    conditionMet = true; //delet this just for testing
                     console.log('JUST CHECKING THE TOKEN');
                     console.log(alert.token);
                     if (conditionMet) {
