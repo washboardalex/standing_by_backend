@@ -10,6 +10,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.createAlert = void 0;
+const errors_1 = require("../utils/errors");
 // const createUserAlertRelation = async (countryId : number, db: any) => {
 //     await db.insert({
 //         countryId: countryId
@@ -125,9 +126,10 @@ exports.createAlert = (req, res, db) => __awaiter(void 0, void 0, void 0, functi
             res.status(200).json(tuple);
         })
             .catch((err) => {
-            console.log("you are hitting this");
-            console.log("error code : ");
-            console.log(err.code);
+            console.error(err);
+            if (Number(err.code) === errors_1.UNIQUE_VIOLATION) {
+                res.status(409).json('duplicate alert');
+            }
             res.status(400).json('unable to create alert');
         });
     }

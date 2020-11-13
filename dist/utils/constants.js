@@ -1,5 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.coinApiWebsocket = void 0;
-exports.coinApiWebsocket = 'wss://ws.coincap.io';
+exports.headers = exports.covidApiUrl = void 0;
+exports.covidApiUrl = 'https://api.covid19api.com';
+exports.headers = {
+    'Content-Type': 'application/json',
+    'Accept-Encoding': 'gzip',
+};
 //# sourceMappingURL=constants.js.map
