@@ -10,7 +10,7 @@ import { setFCMToken } from './controllers/setFCMToken';
 import { createAlert } from './controllers/createAlert';
 import { covidApiUrl, headers } from './utils/constants';
 import { formatCountries, greaterThan, lessThan, getKeyValue } from './utils/functions';
-
+require('dotenv').config();
 import ICountrySummary from './models/covidapi/ICountrySummary';
 import { fArgReturn } from './utils/types';
 import { messaging } from 'firebase-admin';

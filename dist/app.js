@@ -43,11 +43,13 @@ const setFCMToken_1 = require("./controllers/setFCMToken");
 const createAlert_1 = require("./controllers/createAlert");
 const constants_1 = require("./utils/constants");
 const functions_1 = require("./utils/functions");
+require('dotenv').config();
+const firebase_1 = require("./utils/firebase/firebase");
 const app = express_1.default();
 app.use(morgan_1.default('combined'));
 app.use(body_parser_1.default.json());
 //run through alerts and send alerts as required
-cron.schedule('* * * * *', function () {
+cron.schedule('0 9,21 * * *', function () {
     const axiosConfig = { headers: constants_1.headers };
     //get updated country data
     axios_1.default.get(`${constants_1.covidApiUrl}/summary`, axiosConfig)
@@ -65,7 +67,57 @@ cron.schedule('* * * * *', function () {
             console.log('alerts are : ');
             console.log(alerts);
             // compare the conditions, if conditions met, send a firebase cloud message
-            // 
+            for (let i = 0; i < alerts.length; i++) {
+                const alert = alerts[i];
+                let comparisonOperator;
+                switch (alert.condition) {
+                    case 'greaterThan':
+                        comparisonOperator = functions_1.greaterThan;
+                        break;
+                    case 'lessThan':
+                        comparisonOperator = functions_1.lessThan;
+                        break;
+                    default:
+                        comparisonOperator = functions_1.greaterThan;
+                }
+                const type = alert.type; //this is veeeeery bad - youll need to fix, add a model or something
+                for (let n = 0; n < allCountrySummary.length; n++) {
+                    const country = allCountrySummary[n];
+                    if (alert.country_name === country.country) {
+                        const isConditionMet = comparisonOperator(alert.value, functions_1.getKeyValue(type)(country));
+                        if (isConditionMet) {
+                            //send firebase cloud message
+                            console.log('condition met!!!');
+                            console.log('device id: ');
+                            console.log(alert.token);
+                            console.log('fuckit heres the whole alert');
+                            console.log(alert);
+                            console.log('Sending Alert');
+                            const message = {
+                                data: {
+                                    country: country.country,
+                                    threshold: alert.value.toString(),
+                                    condition: 'its a test dont worry about value for now'
+                                },
+                                notification: {
+                                    title: 'Basic Notification',
+                                    body: 'This is a basic notification sent from the server!',
+                                    imageUrl: 'https://my-cdn.com/app-logo.png',
+                                },
+                                token: alert.token
+                            };
+                            firebase_1.firebaseAdmin.messaging().send(message)
+                                .then((response) => {
+                                // Response is a message ID string.
+                                console.log('Successfully sent message:', response);
+                            })
+                                .catch((error) => {
+                                console.log('Error sending message:', error);
+                            });
+                        }
+                    }
+                }
+            }
         }
     }))
         .catch((error) => {

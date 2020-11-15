@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.formatCountries = void 0;
+exports.getKeyValue = exports.lessThan = exports.greaterThan = exports.formatCountries = void 0;
 exports.formatCountries = (data) => {
     return data.map((item) => ({
         country: item.Country,
@@ -15,4 +15,7 @@ exports.formatCountries = (data) => {
         premium: item.Premiums
     }));
 };
+exports.greaterThan = (a, b) => a > b;
+exports.lessThan = (a, b) => a < b;
+exports.getKeyValue = (key) => (obj) => obj[key];
 //# sourceMappingURL=functions.js.map
