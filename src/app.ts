@@ -97,12 +97,9 @@ cron.schedule('0 9,21 * * *', function() {
                                         console.log('Error sending message:', error);
                                     });
                             }
-
                         }
                     }
                 }
-                
-
             }
         })
         .catch((error : AxiosError) => {
