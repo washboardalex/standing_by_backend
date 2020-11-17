@@ -1,5 +1,5 @@
 {
-  "name": "cryptoapp",
+  "name": "covidapp",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -9,15 +9,15 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/washboardalex/cryptoapp.git"
+    "url": "git+https://github.com/washboardalex/covidapp.git"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/washboardalex/cryptoapp/issues"
+    "url": "https://github.com/washboardalex/covidapp/issues"
   },
-  "homepage": "https://github.com/washboardalex/cryptoapp#readme",
+  "homepage": "https://github.com/washboardalex/covidapp#readme",
   "devDependencies": {
     "@types/bcrypt": "^3.0.0",
     "@types/body-parser": "^1.19.0",

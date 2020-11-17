@@ -1,5 +1,5 @@
 import {initializeApp, credential, ServiceAccount} from 'firebase-admin';
-import firebaseAccountCredentials from './covid19app-e680a-firebase-adminsdk-k6u14-dfa3a5a3e6.json';
+import firebaseAccountCredentials from './covid19alerts-firebase-adminsdk-qsk8z-f6e73d8a61.json';
 
 const serviceAccount = firebaseAccountCredentials as ServiceAccount;
 
