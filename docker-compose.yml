@@ -8,8 +8,8 @@ services:
     environment:
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: password
-      POSTGRES_URL: postgres://admin:password@localhost:5432/crypto-app
-      POSTGRES_DB: crypto-app
+      POSTGRES_URL: postgres://admin:password@localhost:5432/covid-app
+      POSTGRES_DB: covid-app
       POSTGRES_HOST: postgres
     ports:
       - "5432:5432"
@@ -17,14 +17,14 @@ services:
       - /var/lib/postgresql/data
 
   # Backend
-  crypto-app-server:
+  covid-app-server:
     container_name: backend
     build: ./
     volumes:
-      - ./:/usr/src/crypto-app-server
+      - ./:/usr/src/covid-app-server
     command: npm start
-    working_dir: /usr/src/crypto-app-server
+    working_dir: /usr/src/covid-app-server
     ports:
       - "3001:3001"
     environment:
-      POSTGRES_URI: postgres://admin:password@postgres:5432/crypto-app
+      POSTGRES_URI: postgres://admin:password@postgres:5432/covid-app

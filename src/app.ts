@@ -21,7 +21,7 @@ app.use(morgan('combined'));
 app.use(bodyParser.json());
 
 //run through alerts and send alerts as required
-cron.schedule('0 9,21 * * *', function() {
+cron.schedule('* * * * *', function() {
 
     const axiosConfig = { headers };    
     //get updated country data
@@ -61,11 +61,25 @@ cron.schedule('0 9,21 * * *', function() {
 
                     const type : keyof ICountrySummary = alert.type; //this is veeeeery bad - youll need to fix, add a model or something
 
+                   
+
                     for (let n = 0; n < allCountrySummary.length; n++) {
+
+                        console.log('looping')
+
                         const country : ICountrySummary = allCountrySummary[n];
                         
                         if (alert.country_name === country.country) {
-                            const isConditionMet : boolean = comparisonOperator(alert.value, getKeyValue<keyof ICountrySummary, ICountrySummary>(type)(country));
+                            console.log('alert condition: ', alert.condition)
+                            console.log('type: ', alert.type)
+                            console.log(type)
+                            console.log('condition check')
+                            const isConditionMet : boolean = comparisonOperator(getKeyValue<keyof ICountrySummary, ICountrySummary>(type)(country), alert.value);
+
+                            console.log('alert value:', alert.value)
+                            console.log('country value: ', getKeyValue<keyof ICountrySummary, ICountrySummary>(type)(country))
+
+                            console.log('is condition met: ', isConditionMet);
                             if (isConditionMet) {
                                 //send firebase cloud message
                                 console.log('condition met!!!');

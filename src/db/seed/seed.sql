@@ -247,7 +247,3 @@ insert into country (country_name, country_code) VALUES ('Kazakhstan', 'KZ');
 insert into country (country_name, country_code) VALUES ('Réunion', 'RE');
 insert into country (country_name, country_code) VALUES ('Yemen', 'YE');
 
-insert into fcmtoken (token) values ('cVCs5fkDAQAyTVtuIa7RUkE:APA91bEuF-aYvugpXSX_4mCSFUF0AHR-3Sk4pW-3AUHM3abaPcedfOvLATaOemdphZhAk4WwL4sGqk3z8x6ZssKLKhP0gn3Cxi6QTjKvvCT-yJv-B98whWQAJzuvsFgFbZpjjvWwX5BM');
-insert into alert (condition, value, type, country_id) values ('greaterThan', 200, 'newConfirmed', 1);
-insert into fcmtokenalertrelation (fcm_token_id, alert_id) values (1, 1);
-
