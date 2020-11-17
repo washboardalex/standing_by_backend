@@ -21,7 +21,7 @@ app.use(morgan('combined'));
 app.use(bodyParser.json());
 
 //run through alerts and send alerts as required
-cron.schedule('* 9/12 * * *', function() {
+cron.schedule('* 9,21 * * *', function() {
 
     const axiosConfig = { headers };    
     //get updated country data
