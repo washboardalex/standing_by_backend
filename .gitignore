@@ -1,2 +1,3 @@
 node_modules
-dist/utils/firebase/covid19alerts-firebase-adminsdk-qsk8z-f6e73d8a61.json
+dist/
+.env
