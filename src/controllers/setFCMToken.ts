@@ -1,27 +1,48 @@
-import {Request, Response} from 'express';
+import e, {Request, Response} from 'express';
 
 export const setFCMToken = async (req : Request, res : Response, db : any, bcrypt: any) => {
 
     if (req.body.token) {
 
-        const token = req.body.token;
+        const { token, deviceId } = req.body;
 
-        let tokenInDb = await db
+        console.log('token: ', token, ', deviceId: ', deviceId);
+
+        let tokenDb = await db
             .select('*')
             .from('fcmtoken')
-            .where('token', token);
+            .where('device_id', deviceId)
+            .catch((err:any) => console.error(err));
 
-        //add check for if theres more than one
+        console.log('token in db yo');
+        console.log(tokenDb);
 
-        tokenInDb = tokenInDb[0]
+        tokenDb = tokenDb[0];
+        if (tokenDb) {
+            //check that tokens line up otherwise update
+            //they can be refreshed by the firebase server under certain circumstances
+            if (token === tokenDb.token) {
+                res.status(200).json({ fcm_token_id: tokenDb.fcm_token_id })
+            } else {
 
-        console.log("wtf is this")
-        console.log(tokenInDb)  
+                console.log('updating the token for the device as it should')
 
-        if (tokenInDb) {
-            res.status(200).json({ fcm_token_id: tokenInDb.fcm_token_id })
+                db("fcmtoken")
+                    .update({token: token})
+                    .where('device_id', deviceId)
+                    .then((numUpdatedRows : number) => {
+                        if(!numUpdatedRows) {
+                            res.status(404).json('not found');
+                            return;
+                        }
+                        res.status(200).json({fcm_token_id: tokenDb.fcm_token_id})
+                    }).catch(function(err : any){
+                        res.status(500).json('server error');
+                        return;         
+                    }); 
+            }
         } else {
-            db.insert({ token })
+            db.insert({ token: token, device_id: deviceId })
                 .into('fcmtoken')
                 .returning('fcm_token_id')
                 .then((newToken : any) => {
@@ -31,11 +52,9 @@ export const setFCMToken = async (req : Request, res : Response, db : any, bcryp
                 })
                 .catch((err : any) => {
                     console.error(err)
-                    res.status(400).json('unable to add token');
+                    res.status(500).json('unable to add token');
                 });
-        }
-
-        
+        }        
     }
 }
 
