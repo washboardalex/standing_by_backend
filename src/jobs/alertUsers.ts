@@ -67,8 +67,7 @@ export const setAlertUsersJob = () => cron.schedule('* * * * *', function() {
                                 const message : messaging.Message = {
                                     notification: {
                                         title: 'New Covid-19 Numbers',
-                                        body: generateAlertMessage(alert, country),
-                                        imageUrl: 'https://i.imgur.com/899uuju.png',
+                                        body: generateAlertMessage(alert, country)
                                     },
                                     token: alert.token
                                 }

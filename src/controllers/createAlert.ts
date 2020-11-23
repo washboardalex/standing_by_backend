@@ -116,7 +116,7 @@ export const createAlert = async (req: Request, res : Response, db:any) => {
             .then(trx.commit)
             .catch(trx.rollback);
         })
-        .catch((err : any) => res.status(400).json('unable to create alert'));
+        .catch((err : any) => res.status(500).json('unable to create alert'));
 
         
         
