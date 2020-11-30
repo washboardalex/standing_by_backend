@@ -21,7 +21,7 @@ app.use(bodyParser.json());
 app.post('/token', async (req : Request, res : Response) => setFCMToken(req, res, db, bcrypt) );//add bcrypt later
 app.post('/alert/create', async (req : Request, res : Response) => createAlert(req, res, db) );
 app.get('/alert/read/:id', async (req : Request, res : Response) => getAlerts(req, res, db) );
-app.post('alert/delete', async (req : Request, res : Response) => deleteAlert(req, res, db) );
+app.post('/alert/delete', async (req : Request, res : Response) => deleteAlert(req, res, db) );
 
 
 const port = process.env.PORT || 3001;
