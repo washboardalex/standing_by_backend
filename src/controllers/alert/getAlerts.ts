@@ -15,6 +15,6 @@ export const getAlerts = async (req: Request, res : Response, db:any) => {
     
     console.log('alerts work');
     console.log(alerts);
-    res.status(200);
+    res.status(200).json(alerts);
 }
 
