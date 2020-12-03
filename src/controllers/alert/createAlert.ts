@@ -60,7 +60,7 @@ export const createAlert = async (req: Request, res : Response, db:any) => {
     console.log('country code tuple is : ');
     console.log(countryCodeTuple[0]);
 
-    const { country_id, country_name } = countryCodeTuple[0];
+    const { country_id, country_name, country_slug } = countryCodeTuple[0];
 
     console.log('entering second db call')
     //checks if that exact already exists
@@ -110,8 +110,8 @@ export const createAlert = async (req: Request, res : Response, db:any) => {
                         console.log('new tuple is : ');
                         console.log(tuple);
                         console.log('sending back: ');
-                        console.log(formatNewAlertView(newAlert, country_name));
-                        res.status(200).json(formatNewAlertView(newAlert, country_name));
+                        console.log(formatNewAlertView(newAlert, country_name, country_slug));
+                        res.status(200).json(formatNewAlertView(newAlert, country_name, country_slug));
                     })
                     .catch((err : any) => {
                         console.error(err);

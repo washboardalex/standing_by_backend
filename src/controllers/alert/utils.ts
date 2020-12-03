@@ -17,13 +17,15 @@ export interface ExistingAlertDbFormat {
     country_id: number,
     country_code: string,
     country_name: string,
+    country_slug: string,
     fcm_token_id: number,
     device_id: string,
     token: string
 }
 
-export const formatNewAlertView = (dbFormat : NewAlertDbFormat, countryName : string) :  IAlert => ({
+export const formatNewAlertView = (dbFormat : NewAlertDbFormat, countryName : string, country_slug : string) :  IAlert => ({
     country: countryName, 
+    countrySlug: country_slug,
     type: dbFormat.type,
     condition: dbFormat.condition,
     value: dbFormat.value,
@@ -32,6 +34,7 @@ export const formatNewAlertView = (dbFormat : NewAlertDbFormat, countryName : st
 
 export const formatExistingAlertView = (dbFormat : ExistingAlertDbFormat) : IAlert => ({
     country: dbFormat.country_name, 
+    countrySlug: dbFormat.country_slug, 
     type: dbFormat.type,
     condition: dbFormat.condition,
     value: dbFormat.value,
