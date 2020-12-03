@@ -29,8 +29,6 @@ export const setAlertUsersJob = () => cron.schedule('* * * * *', function() {
     axios.get(`${covidApiUrl}/summary`, axiosConfig)
         .then(async (response : AxiosResponse)  =>  {
             if (response.status === 200 && response.data) {
-                console.log('The data from the api call: ');
-                console.log(response.data);
 
                 const allCountrySummary : Array<ICountrySummary> = formatCountries(response.data.Countries);
                 
@@ -54,8 +52,6 @@ export const setAlertUsersJob = () => cron.schedule('* * * * *', function() {
 
                     for (let n = 0; n < allCountrySummary.length; n++) {
 
-                        console.log('looping')
-
                         const country : ICountrySummary = allCountrySummary[n];
                         
                         if (alert.country_name === country.country) {
@@ -75,10 +71,9 @@ export const setAlertUsersJob = () => cron.schedule('* * * * *', function() {
                                 firebaseAdmin.messaging().send(message)
                                     .then((response) => {
                                         // Response is a message ID string.
-                                        console.log('Successfully sent message:', response);
                                     })
                                     .catch((error) => {
-                                        console.log('Error sending message:', error);
+                                        console.error('Error sending message:', error);
                                     });
                             }
                         }
