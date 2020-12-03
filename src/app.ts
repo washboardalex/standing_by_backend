@@ -7,8 +7,10 @@ require('dotenv').config();
 
 import { db } from './db/db';
 import { setFCMToken } from './controllers/setFCMToken';
-import { createAlert } from './controllers/createAlert';
+import { createAlert } from './controllers/alert/createAlert';
 import { setAlertUsersJob } from './jobs/alertUsers';
+import { getAlerts } from './controllers/alert/getAlerts';
+import { deleteAlert } from './controllers/alert/deleteAlert'; 
 
 
 const app = express();
@@ -18,7 +20,10 @@ app.use(bodyParser.json());
 setAlertUsersJob();
 
 app.post('/token', async (req : Request, res : Response) => setFCMToken(req, res, db, bcrypt) );//add bcrypt later
-app.post('/alert', async (req : Request, res : Response) => createAlert(req, res, db) );
+app.post('/alert/create', async (req : Request, res : Response) => createAlert(req, res, db) );
+app.get('/alert/read/:id', async (req : Request, res : Response) => getAlerts(req, res, db) );
+app.post('/alert/delete', async (req : Request, res : Response) => deleteAlert(req, res, db) );
+
 
 const port = process.env.PORT || 3001;
 app.listen(port, () => console.log(`server is listening on ${port}`));

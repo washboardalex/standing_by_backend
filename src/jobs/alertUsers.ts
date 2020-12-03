@@ -11,12 +11,12 @@ import { firebaseAdmin } from '../utils/firebase/firebase';
 import { db } from '../db/db';
 
 
-const generateAlertMessage = (alert : any, country : any) => {
-    let conditionMsg : string = alert.condition as AlertCondition === 'greaterThan' ? 'more' : 'less'; //potentially becomes a switch
+const generateAlertMessage = (alert : any, country : ICountrySummary) => {
+    let conditionMsg : string = alert.type as AlertType === 'newDeaths' ? country.newDeaths.toString() : country.newConfirmed.toString(); //potentially becomes a switch
 
     const typeMsg : string = alert.type as AlertType === 'newDeaths' ? 'deaths' : 'cases'; //potentially becomes a switch
 
-    return `There have been ${conditionMsg} than ${alert.value} new confirmed ${typeMsg} in ${country.country} today.`;
+    return `There were ${conditionMsg} new confirmed ${typeMsg} in ${country.country} today.`;
 }
 
 export const setAlertUsersJob = () => cron.schedule('0 21 * * *', function() {
@@ -29,8 +29,6 @@ export const setAlertUsersJob = () => cron.schedule('0 21 * * *', function() {
     axios.get(`${covidApiUrl}/summary`, axiosConfig)
         .then(async (response : AxiosResponse)  =>  {
             if (response.status === 200 && response.data) {
-                console.log('The data from the api call: ');
-                console.log(response.data);
 
                 const allCountrySummary : Array<ICountrySummary> = formatCountries(response.data.Countries);
                 
@@ -50,11 +48,9 @@ export const setAlertUsersJob = () => cron.schedule('0 21 * * *', function() {
 
                     let comparisonOperator : fArgReturn = alert.condition === 'greaterThan' ? greaterThan : lessThan;
 
-                    const type : AlertType = alert.type; //this is veeeeery bad - youll need to fix, add a model or something
+                    const type : AlertType = alert.type; 
 
                     for (let n = 0; n < allCountrySummary.length; n++) {
-
-                        console.log('looping')
 
                         const country : ICountrySummary = allCountrySummary[n];
                         
@@ -67,8 +63,7 @@ export const setAlertUsersJob = () => cron.schedule('0 21 * * *', function() {
                                 const message : messaging.Message = {
                                     notification: {
                                         title: 'New Covid-19 Numbers',
-                                        body: generateAlertMessage(alert, country),
-                                        imageUrl: 'https://i.imgur.com/899uuju.png',
+                                        body: generateAlertMessage(alert, country)
                                     },
                                     token: alert.token
                                 }
@@ -76,10 +71,9 @@ export const setAlertUsersJob = () => cron.schedule('0 21 * * *', function() {
                                 firebaseAdmin.messaging().send(message)
                                     .then((response) => {
                                         // Response is a message ID string.
-                                        console.log('Successfully sent message:', response);
                                     })
                                     .catch((error) => {
-                                        console.log('Error sending message:', error);
+                                        console.error('Error sending message:', error);
                                     });
                             }
                         }
