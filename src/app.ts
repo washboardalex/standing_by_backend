@@ -16,7 +16,7 @@ const app = express();
 app.use(morgan('combined'));
 app.use(bodyParser.json());
 
-// setAlertUsersJob();
+setAlertUsersJob();
 
 app.post('/token', async (req : Request, res : Response) => setFCMToken(req, res, db, bcrypt) );//add bcrypt later
 app.post('/alert/create', async (req : Request, res : Response) => createAlert(req, res, db) );

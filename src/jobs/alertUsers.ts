@@ -11,12 +11,12 @@ import { firebaseAdmin } from '../utils/firebase/firebase';
 import { db } from '../db/db';
 
 
-const generateAlertMessage = (alert : any, country : any) => {
-    let conditionMsg : string = alert.condition as AlertCondition === 'greaterThan' ? 'more' : 'less'; //potentially becomes a switch
+const generateAlertMessage = (alert : any, country : ICountrySummary) => {
+    let conditionMsg : string = alert.type as AlertType === 'newDeaths' ? country.newDeaths.toString() : country.newConfirmed.toString(); //potentially becomes a switch
 
     const typeMsg : string = alert.type as AlertType === 'newDeaths' ? 'deaths' : 'cases'; //potentially becomes a switch
 
-    return `There have been ${conditionMsg} than ${alert.value} new confirmed ${typeMsg} in ${country.country} today.`;
+    return `There were ${conditionMsg} new confirmed ${typeMsg} in ${country.country} today.`;
 }
 
 export const setAlertUsersJob = () => cron.schedule('* * * * *', function() {
@@ -50,7 +50,7 @@ export const setAlertUsersJob = () => cron.schedule('* * * * *', function() {
 
                     let comparisonOperator : fArgReturn = alert.condition === 'greaterThan' ? greaterThan : lessThan;
 
-                    const type : AlertType = alert.type; //this is veeeeery bad - youll need to fix, add a model or something
+                    const type : AlertType = alert.type; 
 
                     for (let n = 0; n < allCountrySummary.length; n++) {
 
