@@ -20,7 +20,7 @@ if (process.env.ENVIRONMENT === 'dev') {
     app.use(morgan('dev'));
 } else {
     app.use(morgan('common', {
-        stream: fs.createWriteStream('./logs/logs.txt', {flags: 'a'})
+        stream: fs.createWriteStream('./src/logs/logs.txt', {flags: 'a'})
     }));
 }
 
