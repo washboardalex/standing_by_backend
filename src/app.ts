@@ -4,6 +4,7 @@ import bodyParser from 'body-parser';
 import morgan from 'morgan';
 import bcrypt from 'bcryptjs';
 require('dotenv').config();
+import * as fs from 'fs';
 
 import { db } from './db/db';
 import { setFCMToken } from './controllers/setFCMToken';
@@ -14,7 +15,18 @@ import { deleteAlert } from './controllers/alert/deleteAlert';
 
 
 const app = express();
-app.use(morgan('combined'));
+
+if (process.env.ENVIRONMENT === 'dev') {
+    app.use(morgan('dev'));
+} else {
+    app.use(morgan('common', {
+        stream: fs.createWriteStream('./logs/logs.txt', {flags: 'a'})
+    }));
+}
+
+
+
+
 app.use(bodyParser.json());
 
 setAlertUsersJob();

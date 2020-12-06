@@ -9,6 +9,7 @@ import { fArgReturn } from '../utils/types';
 import { messaging } from 'firebase-admin';
 import { firebaseAdmin } from '../utils/firebase/firebase';
 import { db } from '../db/db';
+import { backOff } from "exponential-backoff";
 
 
 const generateAlertMessage = (alert : any, country : ICountrySummary) => {
@@ -68,13 +69,13 @@ export const setAlertUsersJob = () => cron.schedule('0 21 * * *', function() {
                                     token: alert.token
                                 }
 
-                                firebaseAdmin.messaging().send(message)
+                                backOff(() => firebaseAdmin.messaging().send(message)
                                     .then((response) => {
-                                        // Response is a message ID string.
+                                        console.log('Alert sent successfully: ', response)
                                     })
                                     .catch((error) => {
-                                        console.error('Error sending message:', error);
-                                    });
+                                        console.error('Error sending alert:', error);
+                                    }));
                             }
                         }
                     }
