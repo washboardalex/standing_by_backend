@@ -1,4 +1,5 @@
 import {Request, Response} from 'express';
+import {logger} from '../../app';
 
 export const deleteAlert = async (req: Request, res : Response, db:any) => {
     const { fcmTokenId, alertId } = req.body;
@@ -8,7 +9,7 @@ export const deleteAlert = async (req: Request, res : Response, db:any) => {
             .from('fcmtokenalertrelation')
             .where('alert_id', alertId)
             .catch((err : any) => {
-                console.error(err)
+                logger.error(err)
                 res.status(500).json('server error');
             });
 
@@ -22,7 +23,7 @@ export const deleteAlert = async (req: Request, res : Response, db:any) => {
             })
             .del()
             .catch((err : any) => {
-                console.error(err);
+                logger.error(err);
                 res.status(500).json('server error');
             });
     
@@ -36,7 +37,7 @@ export const deleteAlert = async (req: Request, res : Response, db:any) => {
             .where('alert_id', alertId)
             .del()
             .catch((err : any) => {
-                console.error(err);
+                logger.error(err);
                 res.status(500).json('server error');
             });
 

@@ -10,6 +10,7 @@ import { messaging } from 'firebase-admin';
 import { firebaseAdmin } from '../utils/firebase/firebase';
 import { db } from '../db/db';
 import { backOff } from "exponential-backoff";
+import {logger} from '../app';
 
 
 const generateAlertMessage = (alert : any, country : ICountrySummary) => {
@@ -31,6 +32,9 @@ export const setAlertUsersJob = () => cron.schedule('* * * * *', function() {
         .then(async (response : AxiosResponse)  =>  {
             if (response.status === 200 && response.data) {
 
+                logger.info('this is the response: ');
+                logger.info(response.data);
+                logger.info(response.data.Countries);
                 const allCountrySummary : Array<ICountrySummary> = formatCountries(response.data.Countries);
                 
                 // get all the alerts
@@ -71,11 +75,13 @@ export const setAlertUsersJob = () => cron.schedule('* * * * *', function() {
 
                                 backOff(() => firebaseAdmin.messaging().send(message)
                                     .then((response) => {
-                                        console.log('Alert sent successfully: ', response)
+                                        logger.info('Alert sent successfully: ', response);
                                     })
                                     .catch((error) => {
-                                        console.error('Error sending alert:', error);
-                                    }));
+                                        logger.error('Error sending alert:');
+                                        logger.error(error);
+                                    })
+                                );
                             }
                         }
                     }
@@ -83,7 +89,7 @@ export const setAlertUsersJob = () => cron.schedule('* * * * *', function() {
             }
         })
         .catch((error : AxiosError) => {
-            console.error(error);
+            logger.error(error);
         });    
 });
 

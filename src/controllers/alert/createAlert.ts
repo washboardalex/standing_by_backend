@@ -1,6 +1,7 @@
 import {Request, Response} from 'express';
 import { UNIQUE_VIOLATION } from '../../utils/errors';
 import { formatNewAlertView } from './utils';
+import {logger} from '../../app';
 
 
 export const createAlert = async (req: Request, res : Response, db:any) => {
@@ -20,7 +21,7 @@ export const createAlert = async (req: Request, res : Response, db:any) => {
     .from('fcmtoken')
     .where('fcm_token_id', tokenId)
     .catch((err : any) => {
-        console.error(err);
+        logger.error(err);
         res.status(400).json('database error');
         return;
     });
@@ -38,7 +39,7 @@ export const createAlert = async (req: Request, res : Response, db:any) => {
             .from('country')
             .where('country_code', countryCode)
             .catch((err : any) => {
-                console.error(err);
+                logger.error(err);
                 res.status(400).json('database error');
                 return;
             });
@@ -57,7 +58,7 @@ export const createAlert = async (req: Request, res : Response, db:any) => {
                 'type': newAlert.type
             })
             .catch((err : any) => {
-                console.error(err);
+                logger.error(err);
                 res.status(400).json('database error');
                 return;
             });;
@@ -87,7 +88,7 @@ export const createAlert = async (req: Request, res : Response, db:any) => {
                         res.status(200).json(formatNewAlertView(newAlert, country_name, country_slug));
                     })
                     .catch((err : any) => {
-                        console.error(err);
+                        logger.error(err);
                     });
             })
             .then(trx.commit)
@@ -108,7 +109,7 @@ export const createAlert = async (req: Request, res : Response, db:any) => {
             res.status(200).json(existingAlert);
         })
         .catch((err : any) => {
-            console.error(err)
+            logger.error(err)
 
             if (Number(err.code) === UNIQUE_VIOLATION) {
                 res.status(409).json('duplicate alert');
