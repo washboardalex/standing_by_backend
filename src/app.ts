@@ -22,14 +22,14 @@ if (process.env.ENVIRONMENT === 'dev') {
     app.use(morgan('dev'));
 } else {
     app.use(morgan('common', {
-        stream: fs.createWriteStream('./morgan.log', {flags: 'a'})
+        stream: fs.createWriteStream('./logs/morgan.log', {flags: 'a'})
     }));
 }
 
 log4js.configure({
     appenders: {
         console: { type: 'console' },
-        file: { type: 'file', filename: 'developer.log' }
+        file: { type: 'file', filename: 'logs/developer.log' }
     },
     categories: {
         developer: { appenders: ['file', 'console'], level: 'info' },
