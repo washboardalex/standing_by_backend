@@ -1,4 +1,5 @@
 import e, {Request, Response} from 'express';
+import {logger} from '../app';
 
 export const setFCMToken = async (req : Request, res : Response, db : any, bcrypt: any) => {
 
@@ -10,7 +11,7 @@ export const setFCMToken = async (req : Request, res : Response, db : any, bcryp
             .select('*')
             .from('fcmtoken')
             .where('device_id', deviceId)
-            .catch((err:any) => console.error(err));
+            .catch((err:any) => logger.error(err));
 
         tokenDb = tokenDb[0];
         if (tokenDb) {
@@ -41,7 +42,7 @@ export const setFCMToken = async (req : Request, res : Response, db : any, bcryp
                     res.status(200).json({ fcm_token_id: newToken[0] });
                 })
                 .catch((err : any) => {
-                    console.error(err)
+                    logger.error(err)
                     res.status(500).json('unable to add token');
                 });
         }        
