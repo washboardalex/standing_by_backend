@@ -18,13 +18,10 @@ import { deleteAlert } from './controllers/alert/deleteAlert';
 const app = express();
 
 //configure logging
-if (process.env.ENVIRONMENT === 'dev') {
-    app.use(morgan('dev'));
-} else {
-    app.use(morgan('common', {
-        stream: fs.createWriteStream('logs/morgan.log', {flags: 'a'})
-    }));
-}
+process.env.ENVIRONMENT === 'dev'
+    ? app.use(morgan('dev'))
+    : app.use(morgan('common'));
+
 
 log4js.configure({
     appenders: {
