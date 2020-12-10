@@ -21,7 +21,7 @@ const generateAlertMessage = (alert : any, country : ICountrySummary) => {
     return `There were ${conditionMsg} new confirmed ${typeMsg} in ${country.country} today.`;
 }
 
-export const setAlertUsersJob = () => cron.schedule('0 9,21 * * *', function() {
+export const setAlertUsersJob = () => cron.schedule('0 21 * * *', function() {
 
     //check if the api has been updated since last time
     //if it has then run the below
